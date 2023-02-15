@@ -13,6 +13,7 @@ export class AppComponent implements OnInit {
 
   public employees:Employee[] = [];
   public editEmployee: Employee | null;
+  public deleteEmployee : Employee | null;
 
   constructor (private employeeService: EmployeeService){}
 
@@ -38,6 +39,7 @@ export class AppComponent implements OnInit {
         (response: Employee) =>{
           console.log(response);
           this.getEmployees();
+          addForm.reset();
         },
         (error: HttpErrorResponse)=>{
           alert(error.message)
@@ -56,7 +58,33 @@ export class AppComponent implements OnInit {
         }
       )
   }
+  public onDeleteEmployee(employeeId: number | undefined) :void{
+    console.log(employeeId)
+    this.employeeService.deleteEmployee(employeeId).subscribe(
+      (response: void) =>{  
+        this.getEmployees();       
+      },
+      (error: HttpErrorResponse)=>{
+        alert(error.message)
+      }
+    )
+  }
 
+  public searchEmployees(key: string): void {
+    const results: Employee[] = [];
+    for (const employee of this.employees) {
+      console.log(employee.name.toLowerCase())
+      if (employee.name.toLowerCase().indexOf(key.toLowerCase()) != -1
+      || employee.email.toLowerCase().indexOf(key.toLowerCase()) != -1
+      || employee.jobTitle.toLowerCase().indexOf(key.toLowerCase()) != -1) {
+        results.push(employee);
+      }
+    }
+    this.employees = results;
+    if (results.length === 0 || !key) {
+      this.getEmployees();
+    }
+  }
   public onOpenModal(employee: Employee | null, mode: string): void{
     const container =  document.getElementById('main-container')
     const button = document.createElement('button');
@@ -67,6 +95,9 @@ export class AppComponent implements OnInit {
     button.setAttribute('data-target',`#${mode}EmployeeModal`)
     if(mode === 'update'){
       this.editEmployee = employee
+    }
+    if(mode === 'delete'){
+      this.deleteEmployee = employee
     }
     container?.appendChild(button);
     button.click();
